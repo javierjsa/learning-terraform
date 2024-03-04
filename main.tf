@@ -21,13 +21,28 @@ data "aws_vpc" "default" {
 resource "aws_instance" "blog" {
   ami           = data.aws_ami.app_ami.id
   instance_type = var.instance_type
-  vpc_security_group_ids = [aws_security_group.blog.id]
+  vpc_security_group_ids = [module.security-group.security_group_id]
 
   tags = {
     Name = "HelloWorld"
   }
 }
 
+module "security-group" {
+	source  = "terraform-aws-modules/security-group/aws"
+	version = "5.1.1"
+  name = "blog_new_group"
+
+  vpc_id              = data.aws_vpc.default.id
+
+  ingress_rules       = ["http-80-tcp", "https-443-tcp"]
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  egress_rules        = ["all-all"]
+  egress_cidr_blocks = ["0.0.0.0/0"]
+	}
+
+/*
 resource "aws_security_group" "blog" {
   name        = "blog" // name in aws console
   description = "Allow web traffic in. Allow everything out"
@@ -63,3 +78,4 @@ resource "aws_security_group_rule" "blog_http_out" {
 
   security_group_id = aws_security_group.blog.id
 }
+*/
