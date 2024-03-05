@@ -29,7 +29,6 @@ module "blog_vpc" {
     Terraform = "true"
     Environment = "dev"
   }
-}
 
 resource "aws_instance" "blog" {
   ami           = data.aws_ami.app_ami.id
