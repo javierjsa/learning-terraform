@@ -54,6 +54,7 @@ module "alb" {
   security_groups = [module.security-group.security_group_id]
   vpc_id = module.blog_vpc.vpc_id
   subnets = module.blog_vpc.public_subnets
+  enable_deletion_protection = "false"
   }
   
 resource "aws_lb_listener" "blog-alb" {
