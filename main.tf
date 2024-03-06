@@ -67,7 +67,7 @@ default_action {
   }
 }
 
-resource "aws_lb_target_group" "blog-tb" {
+resource "aws_lb_target_group" "blog-tg" {
   name     = "alb-tg"
   port     = 80
   protocol = "HTTP"
