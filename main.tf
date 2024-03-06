@@ -44,6 +44,44 @@ resource "aws_instance" "blog" {
   }
 }
 
+module "alb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "9.7.0"
+
+  name = "blog-alb"
+  load_balancer_type = "application"
+  security_groups = module.security-group.security_group_id
+  vpc_id = module.blog_vpc.vpc_id
+  subnets = module.blog_vpc.public_subnets
+  enable_cross_zone_load_balancing = "true"
+    
+  target_groups = {
+    "instance" = {
+        name_prefix      = "blog-"
+        protocol         = "HTTP"
+        port             = 80
+        target_type      = "instance"
+        targets = {
+          my_target = {
+              target_id = module.aws_instance.blog.id
+              port = 80
+          }
+      }
+    }
+  }
+
+  listeners = {
+    ex-http-https-redirect = {
+      port     = 80
+      protocol = "HTTP"
+      forward = {
+        target_group_key = "instance"
+      }
+    }
+
+  }
+}
+
 module "security-group" {
 	source  = "terraform-aws-modules/security-group/aws"
 	version = "5.1.1"
