@@ -50,37 +50,37 @@ module "alb" {
 
   name = "blog-alb"
   load_balancer_type = "application"
+  create_security_group = "false"  
   security_groups = [module.security-group.security_group_id]
   vpc_id = module.blog_vpc.vpc_id
   subnets = module.blog_vpc.public_subnets
-  enable_cross_zone_load_balancing = "true"
-    
-  target_groups = {
-    "instance" = {
-        name_prefix      = "blog-"
-        protocol         = "HTTP"
-        port             = 80
-        target_type      = "instance"
-        targets = {
-          my_target = {
-              target_id = aws_instance.blog.id
-              port = 80
-          }
-      }
-    }
   }
+  
+resource "aws_lb_listener" "blog-alb" {
+  load_balancer_arn = module.alb.arn
+  port              = "80"
+  protocol          = "HTTP"
 
-  listeners = {
-    ex-http-https-redirect = {
-      port     = 80
-      protocol = "HTTP"
-      forward = {
-        target_group_key = "instance"
-      }
-    }
-
+default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.blog-tg.arn
   }
 }
+
+resource "aws_lb_target_group" "blog-tb" {
+  name     = "alb-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = module.blog_vpc.vpc_id
+}
+
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = aws_lb_target_group.blog-tg.arn
+  target_id        = aws_instance.blog.id
+  port             = 80
+}
+
+
 
 module "security-group" {
 	source  = "terraform-aws-modules/security-group/aws"
