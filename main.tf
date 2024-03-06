@@ -50,7 +50,7 @@ module "alb" {
 
   name = "blog-alb"
   load_balancer_type = "application"
-  security_groups = module.security-group.security_group_id
+  security_groups = security-group.security_group_id
   vpc_id = module.blog_vpc.vpc_id
   subnets = module.blog_vpc.public_subnets
   enable_cross_zone_load_balancing = "true"
