@@ -32,9 +32,25 @@ module "blog_vpc" {
   }
 }
 
+module "autoscaling" {
+  source  = "terraform-aws-modules/autoscaling/aws"
+  version = "7.4.1"
+  # insert the 1 required variable here
+  name = blog
+  min_size = 1
+  max_size = 3
+
+  vpc_zone_identifier = module.blog_vpc.public_subnets
+  security_groups     = [module.security-group.security_group_id]
+  target_group_arns   = [aws_lb_target_group.blog-tg.arn]
+
+  instance_type       = var.instance_type
+  image_id            = data.aws_ami.app_ami.id
+}
+/*
 resource "aws_instance" "blog" {
-  ami           = data.aws_ami.app_ami.id
-  instance_type = var.instance_type
+  ami                    = data.aws_ami.app_ami.id
+  instance_type          = var.instance_type
   vpc_security_group_ids = [module.security-group.security_group_id]
 
   subnet_id = module.blog_vpc.public_subnets[0]
@@ -43,7 +59,7 @@ resource "aws_instance" "blog" {
     Name = "HelloWorld"
   }
 }
-
+*/
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "9.7.0"
