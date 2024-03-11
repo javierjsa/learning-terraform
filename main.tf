@@ -91,11 +91,11 @@ resource "aws_lb_target_group" "blog-tg" {
   vpc_id   = module.blog_vpc.vpc_id
 }
 
-resource "aws_lb_target_group_attachment" "test" {
+/*resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = aws_lb_target_group.blog-tg.arn
   target_id        = aws_instance.blog.id
   port             = 80
-}
+}*/
 
 
 
