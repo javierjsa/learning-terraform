@@ -36,7 +36,7 @@ module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "7.4.1"
   # insert the 1 required variable here
-  name = blog
+  name = "blog-autoscaling"
   min_size = 1
   max_size = 3
 
