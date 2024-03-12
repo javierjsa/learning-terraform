@@ -17,11 +17,6 @@ variable "ami_filter"{
   } # Bitnami
 }
 
-
-data "aws_vpc" "default" {
-  default = true
-}
-
 variable "environment" {
   description = "Development environment"
   type = object ({
@@ -31,20 +26,20 @@ variable "environment" {
 
   default = {
     name = "dev"
-    cidr = "10.0"
+    network_prefix = "10.0"
   }
 }
 
 variable "min_size" {
   description = "Min autoscaling group size"
-  type = "string"
+  type = number
 
   default = 1
 }
 
 variable "max_size" {
   description = "Max autoscaling group size"
-  type = "string"
+  type = number
 
   default =  3
   
