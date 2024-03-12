@@ -7,12 +7,12 @@ variable "ami_filter"{
   description = "Name filter and owner for AMI"
 
   type = object({
-    name = string
+    values = string
     owner= string
   })
 
   default = {
-      name = "bitnami-tomcat-*-x86_64-hvm-ebs-nami"
+      values = "bitnami-tomcat-*-x86_64-hvm-ebs-nami"
       owner = "979382823631"
   } # Bitnami
 }

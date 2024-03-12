@@ -2,8 +2,8 @@ data "aws_ami" "app_ami" {
   most_recent = true
 
   filter {
-    name   = var.ami_filter.name
-    values = ["bitnami-tomcat-*-x86_64-hvm-ebs-nami"]
+    name   = "name"
+    values = [data.ami_filter.values]
   }
 
   filter {
