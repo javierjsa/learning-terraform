@@ -2,7 +2,7 @@ data "aws_ami" "app_ami" {
   most_recent = true
 
   filter {
-    name   = "name"
+    name   = var.ami_filter.name
     values = ["bitnami-tomcat-*-x86_64-hvm-ebs-nami"]
   }
 
@@ -11,7 +11,7 @@ data "aws_ami" "app_ami" {
     values = ["hvm"]
   }
 
-  owners = ["979382823631"] # Bitnami
+  owners = [var.ami_filter.owner]
 }
 
 data "aws_vpc" "default" {
@@ -21,14 +21,16 @@ data "aws_vpc" "default" {
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
-  name = "dev"
-  cidr = "10.0.0.0/16"
+  name = "${var.environment.name}-vpc"
+  cidr = "${var.environment.network_prefix}.0.0/16"
 
   azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  public_subnets  = ["${var.environment.network_prefix}.101.0/24", 
+                     "${var.environment.network_prefix}.102.0/24",
+                     "${var.environment.network_prefix}.103.0/24"]
   tags = {  
     Terraform = "true"
-    Environment = "dev"
+    Environment = var.environment.name
   }
 }
 
@@ -36,9 +38,9 @@ module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "7.4.1"
   # insert the 1 required variable here
-  name = "blog-autoscaling"
-  min_size = 1
-  max_size = 3
+  name = "${var.environment.name}-blog-autoscaling"
+  min_size = var.min_size
+  max_size = var.max_size
 
   vpc_zone_identifier = module.blog_vpc.public_subnets
   security_groups     = [module.security-group.security_group_id]
@@ -47,24 +49,12 @@ module "autoscaling" {
   instance_type       = var.instance_type
   image_id            = data.aws_ami.app_ami.id
 }
-/*
-resource "aws_instance" "blog" {
-  ami                    = data.aws_ami.app_ami.id
-  instance_type          = var.instance_type
-  vpc_security_group_ids = [module.security-group.security_group_id]
 
-  subnet_id = module.blog_vpc.public_subnets[0]
-
-  tags = {
-    Name = "HelloWorld"
-  }
-}
-*/
 module "alb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "9.7.0"
 
-  name = "blog-alb"
+  name = "${var.environment.name}-blog-alb"
   load_balancer_type = "application"
   create_security_group = "false"  
   security_groups = [module.security-group.security_group_id]
@@ -85,24 +75,16 @@ default_action {
 }
 
 resource "aws_lb_target_group" "blog-tg" {
-  name     = "alb-tg"
+  name     = "${var.environment.name}-alb-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = module.blog_vpc.vpc_id
 }
 
-/*resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn = aws_lb_target_group.blog-tg.arn
-  target_id        = aws_instance.blog.id
-  port             = 80
-}*/
-
-
-
 module "security-group" {
 	source  = "terraform-aws-modules/security-group/aws"
 	version = "5.1.1"
-  name = "blog_new_group"
+  name = "${var.environment.name}-blog_new_group"
 
   vpc_id              = module.blog_vpc.vpc_id
 
