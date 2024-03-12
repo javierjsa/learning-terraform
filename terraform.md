@@ -201,7 +201,7 @@ First thing to look at is the provision instructions. For instance, these are th
 
 This module allows using predefined rules. Instead of defining a security group from scratch, then the rules and then linking the rules to the SG, this modules allows the following:
 
-	module "security-group" {
+	module "security-group" { //this can be changed to an arbitrary name
 		source              = "terraform-aws-modules/security-group/aws"
 		version             = "5.1.1"
 		name                = "blog_new_group"
@@ -228,3 +228,82 @@ Input names can be found at the output section of the documentation. Now let's a
 			Name = "HelloWorld"
 		}
 	}
+
+## Advanced topics
+
+### Get ready to scale
+
+Add a load balancer to the ec2 instances. Start off with the documentation example from the terraform registry.
+
+
+	module "alb" {
+		source = "terraform-aws-modules/alb/aws"
+
+		name    = "blog-alb"
+		vpc_id  = "vpc-abcde012"
+		subnets = ["subnet-abcde012", "subnet-bcde012a"]
+
+		# Security Group
+		security_group_ingress_rules = {
+			all_http = {
+			from_port   = 80
+			to_port     = 80
+			ip_protocol = "tcp"
+			description = "HTTP web traffic"
+			cidr_ipv4   = "0.0.0.0/0"
+			}
+			all_https = {
+			from_port   = 443
+			to_port     = 443
+			ip_protocol = "tcp"
+			description = "HTTPS web traffic"
+			cidr_ipv4   = "0.0.0.0/0"
+			}
+		}
+		security_group_egress_rules = {
+			all = {
+			ip_protocol = "-1"
+			cidr_ipv4   = "10.0.0.0/16"
+			}
+		}
+
+		access_logs = {
+			bucket = "my-alb-logs"
+		}
+
+		listeners = {
+			ex-http-https-redirect = {
+			port     = 80
+			protocol = "HTTP"
+			redirect = {
+				port        = "443"
+				protocol    = "HTTPS"
+				status_code = "HTTP_301"
+			}
+			}
+			ex-https = {
+			port            = 443
+			protocol        = "HTTPS"
+			certificate_arn = "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012"
+
+			forward = {
+				target_group_key = "ex-instance"
+			}
+			}
+		}
+
+		target_groups = {
+			ex-instance = {
+			name_prefix      = "h1"
+			protocol         = "HTTP"
+			port             = 80
+			target_type      = "instance"
+			}
+		}
+
+		tags = {
+			Environment = "Development"
+			Project     = "Example"
+		}
+	}
+
